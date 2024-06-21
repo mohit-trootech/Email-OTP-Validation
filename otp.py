@@ -4,11 +4,15 @@ import re
 import random
 import constant
 from smtplib import SMTP
-from utils import EmailInvalid, time_difference
+from dotenv import dotenv_values
 from datetime import datetime, date
 from otp_database import DatabaseOtp
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from utils import EmailInvalid, time_difference
+
+# Environment Configuration
+config = dotenv_values(".env")
 
 
 class OTP(DatabaseOtp):
@@ -105,12 +109,12 @@ class OtpSend(OTP):
         try:
             with SMTP(constant.SMTP_HOST, constant.SMTP_PORT) as smtp:
                 smtp.starttls()
-                smtp.login(constant.SMTP_EMAIL, constant.SMTP_PASSKEY)
+                smtp.login(config.get("SMTP_EMAIL"), config.get("SMTP_PASSKEY"))
                 message = MIMEMultipart()
                 message["Subject"] = "OTP Validation"
                 body = constant.EMAIL_BODY.format(date_today=str(date.today()), otp_number=otp)
                 message.attach(MIMEText(body, "html"))
-                smtp.sendmail(constant.SMTP_EMAIL, email, message.as_string())
+                smtp.sendmail(config.get("SMTP_EMAIL"), email, message.as_string())
                 return True
         except Exception as e:
             print(e)
@@ -118,9 +122,8 @@ class OtpSend(OTP):
 
 if __name__ == "__main__":
     try:
-        # print("Email Must Follow the Syntax [a-z0-9._+]@[a-z0-9].[a-z]{2,4}")
-        # email_input = input("Enter your Email Address: ")
-        # obj = OtpSend(email_input)
-        obj = OtpSend(constant.TEST_EMAIL)
+        print("Email Must Follow the Syntax [a-z0-9._+]@[a-z0-9].[a-z]{2,4}")
+        email_input = input("Enter your Email Address: ")
+        obj = OtpSend(email_input)
     except Exception as error:
         print(error)
