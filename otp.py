@@ -12,7 +12,7 @@ from email.mime.multipart import MIMEMultipart
 from utils import EmailInvalid, time_difference
 
 # Environment Configuration
-config = dotenv_values(".env")
+config = dotenv_values("../.env")
 
 
 class OTP(DatabaseOtp):
