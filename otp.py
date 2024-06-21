@@ -4,8 +4,8 @@ import re
 import random
 import constant
 from smtplib import SMTP
+from utils import EmailInvalid, time_difference
 from datetime import datetime, date
-from utils import EmailInvalid
 from otp_database import DatabaseOtp
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -39,12 +39,11 @@ class OTP(DatabaseOtp):
         @param email: str
         """
         otp_data = self.get_last_otp_data(email)
-        time_difference = constant.CURRENT_TIME - datetime.strptime(otp_data[2],
-                                                                    "%Y-%m-%d %H:%M:%S")
         tries = 5
         while True:
+            tries -= 1
             try:
-                if time_difference.total_seconds() > 60:
+                if time_difference(datetime.strptime(otp_data[2], "%Y-%m-%d %H:%M:%S")) > 60.00:
                     raise Exception(constant.EXPIRY_OTP)
                 received_otp = int(input("Enter Received OTP: "))
                 if received_otp == int(otp_data[-2]):
@@ -52,7 +51,6 @@ class OTP(DatabaseOtp):
                     self.status_update(otp_data, constant.STATUS_SUCCESS)
                     break
                 else:
-                    tries -= 1
                     if tries == 0:
                         print(constant.NO_TRY)
                         self.status_update(otp_data, constant.STATUS_FAILED)
@@ -60,12 +58,12 @@ class OTP(DatabaseOtp):
                     else:
                         print(f"You are Left With {tries} Tries Try Again")
             except ValueError:
-                tries -= 1
                 print(f"You are Left With {tries} Tries Try Again")
                 print("Try Entering a Numeric OTP Received")
-                self.status_update(otp_data, constant.STATUS_FAILED)
             except Exception as e:
                 print(e)
+                self.status_update(otp_data, constant.STATUS_FAILED)
+                break
 
 
 class OtpSend(OTP):
